@@ -3,7 +3,6 @@ import { DroneStatus, type Drones, type Location, type FlightPaths, type Anomaly
 import { useTranslation } from '../contexts/I18nContext';
 import { METERS_TO_FEET } from '../constants';
 
-// ... [Props interface and helper functions remain unchanged] ...
 // Let TypeScript know that 'L' is a global object from the Leaflet script
 declare const L: any;
 
@@ -40,7 +39,6 @@ interface DroneMapProps {
     getDroneDisplayName: (droneId: string) => string;
 }
 
-// ... [Helper functions like getAnomalyIcon, getDroneIconSVG, etc. remain unchanged] ...
 const getAnomalyIcon = (anomaly: Anomaly) => {
     const severityColors: Record<string, string> = { High: 'text-red-500', Medium: 'text-yellow-400', Low: 'text-blue-400' };
     
@@ -104,8 +102,16 @@ const getThreatIcon = (threat: Threat) => {
     const color = severityColors[threat.severity];
 
     if (threat.type === ThreatType.UNIDENTIFIED_DRONE) {
-        const droneIconPath = `<path fill-rule="evenodd" d="M11 11V7.5a.5.5 0 011 0V11h3.5a.5.5 0 010 1H12v3.5a.5.5 0 01-1 0V12H7.5a.5.5 0 010-1H11zM12 1a2 2 0 100 4 2 2 0 000-4zm2 11a2 2 0 104 0 2 2 0 00-4 0zm9 9a2 2 0 100 4 2 2 0 000-4zm9-9a2 2 0 104 0 2 2 0 00-4 0z" clip-rule="evenodd" />`;
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" class="w-8 h-8">${droneIconPath}</svg>`;
+        // Verified Quadcopter Drone Icon
+        const droneIconContent = `
+            <path d="M5 5 L19 19 M19 5 L5 19" stroke="${color}" stroke-width="2" stroke-linecap="round" />
+            <circle cx="12" cy="12" r="3" fill="${color}" fill-opacity="0.8" />
+            <circle cx="5" cy="5" r="2" fill="${color}" />
+            <circle cx="19" cy="5" r="2" fill="${color}" />
+            <circle cx="5" cy="19" r="2" fill="${color}" />
+            <circle cx="19" cy="19" r="2" fill="${color}" />
+        `;
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 h-8">${droneIconContent}</svg>`;
     }
 
     // Original icon for other threats
@@ -125,7 +131,15 @@ const getUFOIcon = (ufo: UnidentifiedFlyingObject) => {
             break;
         case 'fpv_drone':
         case 'unknown_uav':
-            path = `<path fill-rule="evenodd" d="M11 11V7.5a.5.5 0 011 0V11h3.5a.5.5 0 010 1H12v3.5a.5.5 0 01-1 0V12H7.5a.5.5 0 010-1H11zM12 1a2 2 0 100 4 2 2 0 000-4zm2 11a2 2 0 104 0 2 2 0 00-4 0zm9 9a2 2 0 100 4 2 2 0 000-4zm9-9a2 2 0 104 0 2 2 0 00-4 0z" clip-rule="evenodd" />`;
+            // Fixed path: Quadcopter shape for UFO drones
+            path = `
+                <path d="M4 4 L20 20 M20 4 L4 20" stroke="${color}" stroke-width="2" stroke-linecap="round" />
+                <circle cx="12" cy="12" r="3" fill="${color}" fill-opacity="0.8" />
+                <circle cx="4" cy="4" r="2" fill="${color}" />
+                <circle cx="20" cy="4" r="2" fill="${color}" />
+                <circle cx="4" cy="20" r="2" fill="${color}" />
+                <circle cx="20" cy="20" r="2" fill="${color}" />
+            `;
             break;
         case 'commercial_jet':
         case 'private_plane':
@@ -336,7 +350,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [anomalies, selectedAnomalyId, onAnomalySelect, getDroneDisplayName, t]);
 
-    // ... [Threat Markers effect] ...
+    // Threat Markers effect
     useEffect(() => {
         if (!mapRef.current) return;
         const map = mapRef.current;
@@ -377,7 +391,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [threats, selectedThreatId, onThreatSelect]);
 
-    // ... [AI Target Markers effect] ...
+    // AI Target Markers effect
     useEffect(() => {
         if (!mapRef.current) return;
         const map = mapRef.current;
@@ -410,7 +424,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [aiTargetDesignations, selectedTargetDesignationId]);
 
-     // ... [UFO Markers effect] ...
+     // UFO Markers effect
     useEffect(() => {
         if (!mapRef.current) return;
         const map = mapRef.current;
@@ -443,7 +457,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [ufos]);
 
-    // ... [Flight Path Layers effect] ...
+    // Flight Path Layers effect
     useEffect(() => {
         if (!mapRef.current) return;
         const map = mapRef.current;
@@ -471,7 +485,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [flightPaths, selectedDroneId, drones]);
 
-    // ... [Mission Targets effect] ...
+    // Mission Targets effect
     useEffect(() => {
         if (!mapRef.current) return;
         const map = mapRef.current;
@@ -503,7 +517,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [drones]);
 
-    // ... [Geofence Layers effect] ...
+    // Geofence Layers effect
     useEffect(() => {
         if (!mapRef.current) return;
         const map = mapRef.current;
@@ -529,7 +543,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [geofences, showGeofences]);
 
-    // ... [Drawing Geofence effect] ...
+    // Drawing Geofence effect
     useEffect(() => {
         const map = mapRef.current;
         if (!map) return;
@@ -550,7 +564,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         }
     }, [isDrawingGeofence, newGeofencePoints]);
 
-    // ... [Event Marker effect] ...
+    // Event Marker effect
     useEffect(() => {
         const map = mapRef.current;
         if (!map) return;
@@ -602,7 +616,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         }
     }, [selectedGeofenceEventId, geofenceEvents, t, onDeselect]);
 
-    // ... [Elimination Events effect] ...
+    // Elimination Events effect
     useEffect(() => {
         if (!mapRef.current || eliminationEvents.length === 0) return;
         const map = mapRef.current;
@@ -617,7 +631,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [eliminationEvents]);
 
-    // ... [C-UAS Visualization effect] ...
+    // C-UAS Visualization effect
     useEffect(() => {
         const map = mapRef.current;
         if (!map || !counterUAS) return;
@@ -641,7 +655,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         });
     }, [counterUAS, ufos]);
 
-    // ... [Replay Mode effect] ...
+    // Replay Mode effect
     useEffect(() => {
         if (!mapRef.current) return;
         const map = mapRef.current;
@@ -682,7 +696,7 @@ export const DroneMap: React.FC<DroneMapProps> = ({
         }
     }, [isReplayMode, replayDroneId, replayProgressIndex, flightPaths, drones, isUserPanned]);
 
-    // ... [Map Panning Logic remains unchanged] ...
+    // Map Panning Logic
     useEffect(() => {
         if (!mapRef.current || isUserPanned || isReplayMode) return;
         let target: Location | Omit<Location, 'alt'> | undefined;
