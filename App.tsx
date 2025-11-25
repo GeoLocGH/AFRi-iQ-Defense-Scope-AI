@@ -907,7 +907,8 @@ export default function App() {
         
         const promises = droneIds.map(droneId => {
             return postCommand(apiPort, `/drones/${droneId}/${action}`).catch(err => {
-                addLogEntry(getDroneDisplayName(droneId), commandName, 'Failed', err instanceof Error ? err.message : 'Unknown error');
+                const message = err instanceof Error ? err.message : 'Unknown error';
+                addLogEntry(getDroneDisplayName(droneId), commandName, 'Failed', message);
             });
         });
         
@@ -1232,7 +1233,7 @@ export default function App() {
             const promises = droneIds.map(id => 
                 postCommand(apiPort, `/drones/${id}/launch`)
                     .then(() => addLogEntry(getDroneDisplayName(id), commandName, 'Success'))
-                    .catch(error => addLogEntry(getDroneDisplayName(id), commandName, 'Failed', error instanceof Error ? error.message : 'Unknown error'))
+                    .catch((error: unknown) => addLogEntry(getDroneDisplayName(id), commandName, 'Failed', error instanceof Error ? error.message : 'Unknown error'))
             );
             
             await Promise.all(promises);

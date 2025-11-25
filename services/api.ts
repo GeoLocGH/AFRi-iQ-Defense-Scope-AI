@@ -66,13 +66,14 @@ const FPV_DRONE_CHANCE = 0.02;
 
 // Base location coordinates. Altitude is in meters.
 const BASE_LOCATIONS = [
-    { lat: 6.232241, lon: 1.477163, alt: 0 },
-    { lat: 6.137378, lon: 1.198244, alt: 0 }
+    { lat: 5.579601, lon: -0.188167, alt: 0 },
+    { lat: 5.728367, lon: -0.015456, alt: 0 },
+    { lat: 5.569937, lon: -0.129044, alt: 0 }
 ];
 
 const SIMULATION_CENTER = {
-    lat: (BASE_LOCATIONS[0].lat + BASE_LOCATIONS[1].lat) / 2,
-    lon: (BASE_LOCATIONS[0].lon + BASE_LOCATIONS[1].lon) / 2
+    lat: BASE_LOCATIONS.reduce((sum, loc) => sum + loc.lat, 0) / BASE_LOCATIONS.length,
+    lon: BASE_LOCATIONS.reduce((sum, loc) => sum + loc.lon, 0) / BASE_LOCATIONS.length
 };
 
 const HAZARD_ZONES = [
@@ -268,6 +269,19 @@ function initializeUFOs() {
         speed: 120, // 120 km/h
         heading: 180, // Heading South, towards the base
     });
+    
+    // NEW: Specific FPV drone for C-UAS B2 to demonstrate functionality
+    ufos.push({
+        id: `ufo_fpv_b2_target`,
+        type: 'fpv_drone',
+        location: {
+            lat: BASE_LOCATIONS[1].lat - 0.008, // Approx 1km South of Base 2
+            lon: BASE_LOCATIONS[1].lon,
+            alt: 120, 
+        },
+        speed: 130, 
+        heading: 0, // Heading North
+    });
 }
 
 function updateUFOSimulation() {
@@ -284,7 +298,7 @@ function updateUFOSimulation() {
     });
 
     // Chance to spawn a fast FPV drone threat
-    if (Math.random() < FPV_DRONE_CHANCE * SIMULATION_SPEED && ufos.filter(u => u.type === 'fpv_drone').length < 2) {
+    if (Math.random() < FPV_DRONE_CHANCE * SIMULATION_SPEED && ufos.filter(u => u.type === 'fpv_drone').length < 4) {
         ufos.push({
             id: `ufo_fpv_${Date.now()}`,
             type: 'fpv_drone',
@@ -502,15 +516,22 @@ function updateCounterUASSimulation() {
                     }, 15000); // 15s reload time
                     break;
                 }
+                
+                // Defensive check: If for some reason we have no target ID, go back to scanning
+                if (!system.currentTargetId) {
+                    system.status = CounterUASStatus.SCANNING;
+                    break;
+                }
 
                 const target = ufos.find(u => u.id === system.currentTargetId);
                 if (target && system.currentTargetInfo) {
-                    system.ammo -= 15;
+                    system.ammo -= 5; // Reduced ammo usage for longer engagement
                     const distance = system.currentTargetInfo.distance;
                     
-                    const baseHitChance = 0.98 * Math.pow(1 - (distance / system.engagementRadius), 0.75);
-                    const speedPenalty = Math.min(0.25, (target.speed / 150) * 0.25);
-                    const finalHitChance = baseHitChance - speedPenalty;
+                    // Improved hit chance calculation
+                    const baseHitChance = 0.98 * Math.pow(1 - (distance / (system.engagementRadius * 1.1)), 0.5);
+                    const speedPenalty = Math.min(0.20, (target.speed / 200) * 0.20);
+                    const finalHitChance = Math.max(0.05, baseHitChance - speedPenalty); // Minimum 5% hit chance
 
                     if (Math.random() < finalHitChance) {
                         eliminationEvents.push({ targetId: target.id, location: target.location, timestamp: Date.now() });
