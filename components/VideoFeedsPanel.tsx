@@ -77,7 +77,7 @@ export const VideoFeedsPanel: React.FC<VideoFeedsPanelProps> = ({ drones, droneN
     const expandedDrone = expandedDroneId ? missionDrones.find(([id]) => id === expandedDroneId) : null;
 
     return (
-        <div className="h-full min-h-[450px] flex flex-col p-6">
+        <div className="h-auto min-h-[300px] flex flex-col p-6">
             {expandedDrone ? (
                 <div className="flex-grow relative">
                     <VideoFeed

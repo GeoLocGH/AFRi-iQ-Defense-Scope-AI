@@ -33,20 +33,20 @@
 
         /* Pulse animation for the mission target */
         .target-marker-pulse {
-            animation: target-pulse 2s infinite;
+            animation: target-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
         @keyframes target-pulse {
             0% {
-                transform: scale(0.9);
-                opacity: 0.7;
+                transform: scale(0.8);
+                opacity: 0.8;
             }
-            70% {
-                transform: scale(2.5);
+            50% {
+                transform: scale(1.5);
                 opacity: 0;
             }
             100% {
-                transform: scale(0.9);
+                transform: scale(0.8);
                 opacity: 0;
             }
         }
@@ -229,6 +229,24 @@
             font-weight: bold;
             box-shadow: none;
             white-space: nowrap;
+        }
+
+        /* Force Rnd components to behave like normal divs when not detached */
+        .rnd-in-grid {
+            position: relative !important;
+            transform: none !important;
+            width: 100% !important;
+            height: auto !important;
+            left: 0 !important;
+            top: 0 !important;
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 8s linear infinite;
         }
     </style>
 <script type="importmap">

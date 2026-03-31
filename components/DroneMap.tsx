@@ -69,9 +69,11 @@ const getAnomalyIcon = (anomaly: Anomaly) => {
 
 const getDroneIconSVG = (drone: Drone, isSelected: boolean, heading: number) => {
     const isLockedOn = drone.target_locked;
+    const isActive = [DroneStatus.MISSION, DroneStatus.INTERCEPTING, DroneStatus.HOVERING_ON_TARGET, DroneStatus.AI_OVERRIDE].includes(drone.status);
     let iconContent: string;
     
     const color = isSelected ? '#2dd4bf' : '#9ca3af'; // cyan-400 or gray-400
+    const pulseColorClass = isSelected ? 'bg-cyan-400' : 'bg-gray-400';
 
     switch (drone.droneType) {
         case 'Assault':
@@ -90,10 +92,14 @@ const getDroneIconSVG = (drone: Drone, isSelected: boolean, heading: number) => 
     }
     
     const pulseClass = isLockedOn ? 'drone-locked-pulse' : '';
+    const activePulseHtml = isActive ? `<div class="absolute w-10 h-10 ${pulseColorClass} rounded-full opacity-40 target-marker-pulse"></div>` : '';
     
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 h-8 ${pulseClass}">
-        <g transform="rotate(${heading} 12 12)">${iconContent}</g>
-    </svg>`;
+    return `<div class="relative flex items-center justify-center w-8 h-8">
+        ${activePulseHtml}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="relative w-8 h-8 ${pulseClass}">
+            <g transform="rotate(${heading} 12 12)">${iconContent}</g>
+        </svg>
+    </div>`;
 };
 
 

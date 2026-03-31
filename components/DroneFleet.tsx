@@ -125,7 +125,7 @@ export const DroneFleet: React.FC<DroneFleetProps> = ({
     const onMissionDrones = groupedDrones.onMission;
 
     return (
-        <div id="drone-fleet-groups" className="p-6 space-y-6">
+        <div id="drone-fleet-groups" className="p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar">
             {onMissionDrones.length > 0 && (
                 <div className="rounded-lg border border-gray-700 bg-gray-900/50 overflow-hidden">
                     <div className="bg-purple-900/50 p-3 flex justify-between items-center border-b border-gray-700">

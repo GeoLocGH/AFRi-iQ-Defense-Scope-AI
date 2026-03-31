@@ -1323,13 +1323,13 @@ export default function App() {
     const replayPath = replayTargetId ? flightPaths[replayTargetId] : null;
 
     return (
-        <div>
-            <div className="container mx-auto px-4 md:px-8 pb-8">
-                <Header />
-                
-                {/* Controls and Status Section */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-                    <WindowFrame title={t('fleet_controls.title')}>
+        <div className="h-screen w-screen flex flex-col bg-gray-950 text-gray-100 font-sans overflow-hidden">
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-950">
+                <div className="max-w-6xl mx-auto p-4 md:p-8 flex flex-col gap-8">
+                    <Header className="z-50 shadow-md relative shrink-0" />
+                    
+                    {/* 1. Fleet Controls */}
+                    <WindowFrame id="fleet-controls" title={t('fleet_controls.title')}>
                         <FleetControls
                             onFleetCommand={handleFleetCommand}
                             onShowMissionModal={() => showMissionModal('fleet')}
@@ -1339,35 +1339,17 @@ export default function App() {
                             getDroneDisplayName={getDroneDisplayName}
                         />
                     </WindowFrame>
-                    <div className="space-y-8">
-                        {(Object.values(counterUASSystems) as CounterUASSystem[]).sort((a: CounterUASSystem, b: CounterUASSystem) => a.id.localeCompare(b.id)).map((system: CounterUASSystem) => (
-                            <WindowFrame key={system.id} title={t('counter_uas.title_id', { id: system.id.split('-')[0].toUpperCase() })}>
-                                <CounterUASPanel 
-                                    system={system} 
-                                    onCeaseFire={() => handleCeaseFire(system.id)} 
-                                />
-                            </WindowFrame>
-                        ))}
-                        <WindowFrame title={t('geofence.title')}>
-                            <GeofencePanel
-                                geofences={geofences}
-                                onStartDrawing={handleStartDrawingGeofence}
-                                onDelete={handleDeleteGeofence}
-                            />
-                        </WindowFrame>
-                        <WindowFrame title={t('audio_alerts.title')}>
-                             <AudioAlerts
-                                preferences={alertPreferences}
-                                onPreferencesChange={setAlertPreferences}
-                                availableVoices={availableVoices}
-                            />
-                        </WindowFrame>
-                    </div>
-                </div>
 
-                {/* Map and Video Section */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8" ref={mapRef}>
-                    <WindowFrame title="Live Geo-Spatial Map" className="h-full">
+                    {/* 2. Video Feeds */}
+                    <WindowFrame id="video-feeds" title={t('video_feeds.title', { count: Object.values(drones as Drones).filter((d: Drone) => [DroneStatus.MISSION, DroneStatus.HOVERING_ON_TARGET, DroneStatus.AI_OVERRIDE].includes(d.status)).length })}>
+                        <VideoFeedsPanel drones={drones} droneNicknames={droneNicknames} />
+                    </WindowFrame>
+
+                    {/* 3. Drone Map - Now as a prominent block in the flow */}
+                    <div className="h-[600px] w-full rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative bg-slate-900 group">
+                        <div className="absolute top-4 left-4 z-20 bg-gray-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gray-700 text-xs font-bold uppercase tracking-widest text-cyan-400 shadow-lg">
+                            {t('drone_map.title')}
+                        </div>
                         <DroneMap
                             drones={drones}
                             selectedDroneId={selectedDroneId}
@@ -1400,171 +1382,201 @@ export default function App() {
                             showGeofences={showGeofences}
                             getDroneDisplayName={getDroneDisplayName}
                         />
-                    </WindowFrame>
-                    <WindowFrame title={t('video_feeds.title', { count: Object.values(drones).filter(d => [DroneStatus.MISSION, DroneStatus.HOVERING_ON_TARGET, DroneStatus.AI_OVERRIDE].includes(d.status)).length })} className="h-full">
-                        <VideoFeedsPanel drones={drones} droneNicknames={droneNicknames} />
-                    </WindowFrame>
-                </div>
-                
-                {isReplayMode && replayPath && (
-                    <ReplayControls
-                        droneId={replayTargetId!}
-                        path={replayPath}
-                        progress={replayProgress}
-                        isPlaying={isReplaying}
-                        speed={replaySpeed}
-                        onPlayPause={() => setIsReplaying(!isReplaying)}
-                        onClose={handleStopReplay}
-                        onProgressChange={setReplayProgress}
-                        onSpeedChange={setReplaySpeed}
-                        getDroneDisplayName={getDroneDisplayName}
-                    />
-                )}
-
-                {/* AI and Intelligence Section */}
-                <div className="space-y-8 mb-8">
-                    <WindowFrame title={t('ai_requests.title', { count: aiActionRequests.length })}>
-                        <AIActionRequests
-                            requests={aiActionRequests}
-                            onRespond={handleAIActionResponse}
-                            onOverride={handleAIActionOverride}
-                            getDroneDisplayName={getDroneDisplayName}
-                        />
-                    </WindowFrame>
-                    
-                    <WindowFrame title={t('ai_targets.title', { count: aiTargetDesignations.length })}>
-                        <AITargetDesignations
-                            designations={aiTargetDesignations}
-                            onRespond={handleAITargetResponse}
-                            onSelect={handleTargetDesignationSelect}
-                            getDroneDisplayName={getDroneDisplayName}
-                            drones={drones}
-                        />
-                    </WindowFrame>
-                    
-                    <WindowFrame title={t('path_intelligence.title', { count: flightSuggestions.length })}>
-                        <FlightPathAnalysis
-                            suggestions={flightSuggestions}
-                            onRespond={handleFlightSuggestionResponse}
-                            getDroneDisplayName={getDroneDisplayName}
-                        />
-                    </WindowFrame>
-                </div>
-
-                {/* Feeds Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-8">
-                    <WindowFrame title={t('threat_feed.title', { count: threats.length })}>
-                        <ThreatFeed
-                            threats={threats}
-                            onSelectThreat={handleThreatSelect}
-                            selectedThreatId={selectedThreatId}
-                            onRespondToThreat={handleRespondToThreat}
-                        />
-                    </WindowFrame>
-                    <WindowFrame title={t('anomaly_feed.title')}>
-                        <AnomalyFeed
-                            anomalies={anomalies}
-                            onSelectAnomaly={handleAnomalySelect}
-                            onInitiateRepair={handleInitiateRepair}
-                            selectedAnomalyId={selectedAnomalyId}
-                            droneNicknames={droneNicknames}
-                        />
-                    </WindowFrame>
-                    <WindowFrame title={t('geofence_event_log.title')}>
-                        <GeofenceEventLog
-                            events={geofenceEvents}
-                            ufos={ufos}
-                            onSelectEvent={handleGeofenceEventSelect}
-                        />
-                    </WindowFrame>
-                </div>
-
-                {/* Fleet Management Section */}
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
-                    <div className="xl:col-span-2">
-                        <WindowFrame title="Drone Fleet Overview">
-                             <DroneFleet
-                                drones={drones}
-                                error={error}
-                                onSingleCommand={handleSingleDroneCommand}
-                                onShowMissionModal={showMissionModal}
-                                selectedDroneId={selectedDroneId}
-                                highSeverityCounts={highSeverityCounts}
-                                healthScores={healthScores}
-                                flightPaths={flightPaths}
-                                droneNicknames={droneNicknames}
-                                onSetNickname={handleSetNickname}
-                                onGroupCommand={handleGroupCommand}
-                                threats={threats}
-                                ufos={ufos}
-                            />
-                        </WindowFrame>
+                        
+                        {/* Replay Controls Overlay */}
+                        {isReplayMode && replayPath && (
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+                                <ReplayControls
+                                    droneId={replayTargetId!}
+                                    path={replayPath}
+                                    progress={replayProgress}
+                                    isPlaying={isReplaying}
+                                    speed={replaySpeed}
+                                    onPlayPause={() => setIsReplaying(!isReplaying)}
+                                    onClose={handleStopReplay}
+                                    onProgressChange={setReplayProgress}
+                                    onSpeedChange={setReplaySpeed}
+                                    getDroneDisplayName={getDroneDisplayName}
+                                />
+                            </div>
+                        )}
                     </div>
-                    <div className="space-y-8">
-                        <WindowFrame title={t('comm_assistant.title')}>
+
+                    {/* 4. Operational Intelligence Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="flex flex-col gap-8">
+                            <WindowFrame id="threat-feed" title={t('threat_feed.title', { count: threats.length })}>
+                                <ThreatFeed
+                                    threats={threats}
+                                    onSelectThreat={handleThreatSelect}
+                                    selectedThreatId={selectedThreatId}
+                                    onRespondToThreat={handleRespondToThreat}
+                                />
+                            </WindowFrame>
+
+                            <WindowFrame id="anomaly-feed" title={t('anomaly_feed.title')}>
+                                <AnomalyFeed
+                                    anomalies={anomalies}
+                                    onSelectAnomaly={handleAnomalySelect}
+                                    onInitiateRepair={handleInitiateRepair}
+                                    selectedAnomalyId={selectedAnomalyId}
+                                    droneNicknames={droneNicknames}
+                                />
+                            </WindowFrame>
+
+                            {(Object.values(counterUASSystems) as CounterUASSystem[]).sort((a: CounterUASSystem, b: CounterUASSystem) => a.id.localeCompare(b.id)).map((system: CounterUASSystem) => (
+                                <WindowFrame id={`counter-uas-${system.id}`} key={system.id} title={t('counter_uas.title_id', { id: system.id.split('-')[0].toUpperCase() })}>
+                                    <CounterUASPanel 
+                                        system={system} 
+                                        onCeaseFire={() => handleCeaseFire(system.id)} 
+                                    />
+                                </WindowFrame>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-col gap-8">
+                            <WindowFrame id="ai-requests" title={t('ai_requests.title', { count: aiActionRequests.length })}>
+                                <AIActionRequests
+                                    requests={aiActionRequests}
+                                    onRespond={handleAIActionResponse}
+                                    onOverride={handleAIActionOverride}
+                                    getDroneDisplayName={getDroneDisplayName}
+                                />
+                            </WindowFrame>
+
+                            <WindowFrame id="ai-targets" title={t('ai_targets.title', { count: aiTargetDesignations.length })}>
+                                <AITargetDesignations
+                                    designations={aiTargetDesignations}
+                                    onRespond={handleAITargetResponse}
+                                    onSelect={handleTargetDesignationSelect}
+                                    getDroneDisplayName={getDroneDisplayName}
+                                    drones={drones}
+                                />
+                            </WindowFrame>
+
+                            <WindowFrame id="path-intelligence" title={t('path_intelligence.title', { count: flightSuggestions.length })}>
+                                <FlightPathAnalysis
+                                    suggestions={flightSuggestions}
+                                    onRespond={handleFlightSuggestionResponse}
+                                    getDroneDisplayName={getDroneDisplayName}
+                                />
+                            </WindowFrame>
+                        </div>
+                    </div>
+
+                    {/* 5. Fleet Overview & Geofencing */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2">
+                            <WindowFrame id="drone-fleet-overview" title="Drone Fleet Overview">
+                                <DroneFleet
+                                    drones={drones}
+                                    error={error}
+                                    onSingleCommand={handleSingleDroneCommand}
+                                    onShowMissionModal={showMissionModal}
+                                    selectedDroneId={selectedDroneId}
+                                    highSeverityCounts={highSeverityCounts}
+                                    healthScores={healthScores}
+                                    flightPaths={flightPaths}
+                                    droneNicknames={droneNicknames}
+                                    onSetNickname={handleSetNickname}
+                                    onGroupCommand={handleGroupCommand}
+                                    threats={threats}
+                                    ufos={ufos}
+                                />
+                            </WindowFrame>
+                        </div>
+                        <div className="flex flex-col gap-8">
+                            <WindowFrame id="geofence-panel" title={t('geofence.title')}>
+                                <GeofencePanel
+                                    geofences={geofences}
+                                    onStartDrawing={handleStartDrawingGeofence}
+                                    onDelete={handleDeleteGeofence}
+                                />
+                            </WindowFrame>
+                            <WindowFrame id="geofence-event-log" title={t('geofence_event_log.title')}>
+                                <GeofenceEventLog
+                                    events={geofenceEvents}
+                                    ufos={ufos}
+                                    onSelectEvent={handleGeofenceEventSelect}
+                                />
+                            </WindowFrame>
+                        </div>
+                    </div>
+
+                    {/* 6. Communication & Logs */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <WindowFrame id="comm-assistant" title={t('comm_assistant.title')}>
                             <AICommAssistant />
                         </WindowFrame>
+                        <WindowFrame id="command-log" title={t('command_log.title')}>
+                            <CommandLog logEntries={commandLog} />
+                        </WindowFrame>
                     </div>
+
+                    {/* 7. Sound Customization - At the bottom as requested */}
+                    <WindowFrame id="audio-alerts" title={t('audio_alerts.title')}>
+                        <AudioAlerts
+                            preferences={alertPreferences}
+                            onPreferencesChange={setAlertPreferences}
+                            availableVoices={availableVoices}
+                        />
+                    </WindowFrame>
                 </div>
-
-                <WindowFrame title={t('command_log.title')}>
-                    <CommandLog logEntries={commandLog} />
-                </WindowFrame>
-
-                 <SettingsPanel
-                    port={apiPort}
-                    setPort={setApiPort}
-                    userRole={userRole}
-                    onRoleChange={setUserRole}
-                    showGeofences={showGeofences}
-                    onShowGeofencesChange={setShowGeofences}
-                />
-
-                {isModalOpen && (
-                    <MissionModal
-                        isOpen={isModalOpen}
-                        target={modalTarget}
-                        onClose={closeMissionModal}
-                        onSubmit={submitMission}
-                        presets={missionPresets}
-                        userRole={userRole}
-                        onSavePreset={handleSavePreset}
-                        onDeletePreset={handleDeletePreset}
-                        getDroneDisplayName={getDroneDisplayName}
-                    />
-                )}
-
-                {isDiagnosticsModalOpen && (
-                    <DiagnosticsModal
-                        isOpen={isDiagnosticsModalOpen}
-                        onClose={() => setIsDiagnosticsModalOpen(false)}
-                        droneId={diagnosticsTargetId}
-                        isLoading={isDiagnosticsLoading}
-                        result={diagnosticsResult}
-                        getDroneDisplayName={getDroneDisplayName}
-                    />
-                )}
-
-                {isChecklistModalOpen && (
-                    <PreFlightChecklistModal
-                        isOpen={isChecklistModalOpen}
-                        onClose={() => setIsChecklistModalOpen(false)}
-                        onConfirmLaunch={handleConfirmLaunch}
-                        droneId={checklistTargetId}
-                        getDroneDisplayName={getDroneDisplayName}
-                    />
-                )}
-
-                {isGeofenceModalOpen && (
-                    <GeofenceModal
-                        isOpen={isGeofenceModalOpen}
-                        onClose={() => setIsGeofenceModalOpen(false)}
-                        onSave={handleSaveGeofence}
-                        existingNames={geofences.map(g => g.name)}
-                    />
-                )}
-
             </div>
+
+            <SettingsPanel
+                port={apiPort}
+                setPort={setApiPort}
+                userRole={userRole}
+                onRoleChange={setUserRole}
+                showGeofences={showGeofences}
+                onShowGeofencesChange={setShowGeofences}
+            />
+
+            {/* Modals */}
+            {isModalOpen && (
+                <MissionModal
+                    isOpen={isModalOpen}
+                    target={modalTarget}
+                    onClose={closeMissionModal}
+                    onSubmit={submitMission}
+                    presets={missionPresets}
+                    userRole={userRole}
+                    onSavePreset={handleSavePreset}
+                    onDeletePreset={handleDeletePreset}
+                    getDroneDisplayName={getDroneDisplayName}
+                />
+            )}
+
+            {isDiagnosticsModalOpen && (
+                <DiagnosticsModal
+                    isOpen={isDiagnosticsModalOpen}
+                    onClose={() => setIsDiagnosticsModalOpen(false)}
+                    droneId={diagnosticsTargetId}
+                    isLoading={isDiagnosticsLoading}
+                    result={diagnosticsResult}
+                    getDroneDisplayName={getDroneDisplayName}
+                />
+            )}
+
+            {isChecklistModalOpen && (
+                <PreFlightChecklistModal
+                    isOpen={isChecklistModalOpen}
+                    onClose={() => setIsChecklistModalOpen(false)}
+                    onConfirmLaunch={handleConfirmLaunch}
+                    droneId={checklistTargetId}
+                    getDroneDisplayName={getDroneDisplayName}
+                />
+            )}
+
+            {isGeofenceModalOpen && (
+                <GeofenceModal
+                    isOpen={isGeofenceModalOpen}
+                    onClose={() => setIsGeofenceModalOpen(false)}
+                    onSave={handleSaveGeofence}
+                    existingNames={geofences.map(g => g.name)}
+                />
+            )}
         </div>
     );
 }

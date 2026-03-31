@@ -80,7 +80,7 @@ export const AudioAlerts: React.FC<AudioAlertsProps> = ({ preferences, onPrefere
 
 
     return (
-        <div className="p-6">
+        <div className="p-6 max-h-96 overflow-y-auto custom-scrollbar">
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <span className="font-bold text-lg">{t('audio_alerts.master')}</span>

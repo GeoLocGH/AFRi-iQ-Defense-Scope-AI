@@ -100,13 +100,13 @@ const LanguageSelector: React.FC = () => {
     );
 };
 
-export const Header: React.FC = () => {
+export const Header: React.FC<{ className?: string }> = ({ className = "" }) => {
     const { t } = useTranslation();
 
     return (
-        <header className="relative py-4 mb-8">
+        <header className={`relative py-4 bg-gray-900/90 backdrop-blur-sm border-b border-gray-800 ${className}`}>
             <WeatherWidget />
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex items-center gap-3">
                 <LanguageSelector />
             </div>
             <div className="flex flex-col items-center justify-center text-center">
